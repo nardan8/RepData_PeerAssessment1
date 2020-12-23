@@ -6,6 +6,8 @@ output:
 ---
 
 
+
+
 ## Loading and preprocessing the data
 
 ```r
@@ -28,6 +30,33 @@ df <- mutate(df, date = as.Date(date, "%Y-%m-%d"))
 
 
 ## What is mean total number of steps taken per day?
+1. Calculate the total number of steps taken per day
+
+```r
+# group by days
+groupedDf <- group_by(df, date)
+
+# sum steps of each day
+stepsPerDay <- summarise(groupedDf, steps = sum(steps, na.rm = TRUE))
+```
+2. Make a histogram of the total number of steps taken each day
+
+```r
+ggplot(stepsPerDay, aes(x=date, y=steps)) + 
+        geom_bar(stat = "identity", color = "black", fill = "steelblue") + 
+        labs(title = "Total number of steps taken each day", x = "Date", y = "Total step counts")
+```
+
+![  ](figure/figure-1.png)
+
+3. Calculate and report the mean and median of the total number of steps taken per day
+
+```r
+stepsMean <- summarise(stepsPerDay, stepsMean = round(mean(steps, na.rm = TRUE), 0))
+stepsMedian <- summarise(stepsPerDay, stepsMedian = median(steps, na.rm = TRUE))
+```
+The Mean value of the number of steps taken per day is - 9354 steps.  
+The Median value of the number of steps taken per day is - 10395 steps.
 
 
 
