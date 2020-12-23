@@ -47,7 +47,7 @@ ggplot(stepsPerDay, aes(x=date, y=steps)) +
         labs(title = "Total number of steps taken each day", x = "Date", y = "Total step counts")
 ```
 
-![  ](figure/figure-1.png)
+![  ](figure/figure2-1.png)
 
 3. Calculate and report the mean and median of the total number of steps taken per day
 
@@ -61,7 +61,40 @@ The Median value of the number of steps taken per day is - 10395 steps.
 
 
 ## What is the average daily activity pattern?
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
+
+```r
+# group data by 5 minute interval
+groupByInterval <- group_by(df, interval)
+
+# remove NA rows
+groupByInterval <- filter(groupByInterval, !is.na(steps))
+
+# summarise average value of each time interval
+groupByInterval <- groupByInterval %>% summarise(averageSteps = mean(steps))
+```
+
+```r
+# construct graph
+qplot(x = interval, 
+      y = averageSteps, 
+      data = groupByInterval,
+      geom = "line",
+      ylab = "Averaged steps count", 
+      xlab = "5-minute time interval")
+```
+
+![  ](figure/figure-1.png)
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```r
+# max average 5-minute interval steps count
+maxSteps <- groupByInterval[which.max(groupByInterval$averageSteps),]
+maxInterval <- sub("(?<=.{2})", ":", sprintf("%04d", maxSteps$interval), perl = TRUE)
+```
+The "08:35" is 5-minute interval, on average across all the days in the dataset, which contains max number of steps - 206.1698113.
 
 
 ## Imputing missing values
