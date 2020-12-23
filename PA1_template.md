@@ -13,6 +13,16 @@ output:
 ```r
 library(dplyr)
 library(ggplot2)
+
+# set locale from Bad-Russian to English
+Sys.setlocale("LC_TIME", "English")
+```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
 zipFile <- "activity.zip"
 filename <- "activity.csv"
 
@@ -140,12 +150,12 @@ rm(mInterval, naIndexes, allDayIntervalMean)
 
 
 ```r
-filledNAdata <- filledNAdata %>% group_by(date) %>% summarise(steps = sum(steps))
+filledDf <- filledNAdata %>% group_by(date) %>% summarise(steps = sum(steps))
 ```
 
 
 ```r
-ggplot(filledNAdata, aes(x=date, y=steps)) + 
+ggplot(filledDf, aes(x=date, y=steps)) + 
         geom_bar(stat = "identity", color = "black", fill = "orangered3") + 
         labs(title = "Total number of steps taken each day", x = "Date", y = "Total step counts")
 ```
@@ -154,8 +164,8 @@ ggplot(filledNAdata, aes(x=date, y=steps)) +
 
 
 ```r
-newStepsMean <- as.integer(mean(filledNAdata$steps))
-newStepsMedian <- as.integer(median(filledNAdata$steps))
+newStepsMean <- as.integer(mean(filledDf$steps))
+newStepsMedian <- as.integer(median(filledDf$steps))
 ```
 * **With NAs:**  
 1. The **Mean** value of the number of steps taken per day is - **9354 steps**.  
@@ -166,3 +176,41 @@ newStepsMedian <- as.integer(median(filledNAdata$steps))
 2. The **Median** value of the number of steps taken per day is - **10766 steps**.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+**1.Create a new factor variable in the dataset with two levels "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.** 
+
+
+```r
+# add column wday with two variation: weekend or weekday
+filledNAdata <- mutate(filledNAdata,
+                       wday = ifelse(substr(weekdays(date), 1, 1) ==  "S", "weekend", "weekday"))
+filledNAdata$wday <- as.factor(filledNAdata$wday)
+head(filledNAdata)
+```
+
+```
+##     steps       date interval    wday
+## 1 37.3826 2012-10-01        0 weekday
+## 2 37.3826 2012-10-01        5 weekday
+## 3 37.3826 2012-10-01       10 weekday
+## 4 37.3826 2012-10-01       15 weekday
+## 5 37.3826 2012-10-01       20 weekday
+## 6 37.3826 2012-10-01       25 weekday
+```
+
+**2.Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.**
+
+
+```r
+filledNAdata <- filledNAdata %>% group_by(wday, interval) %>% summarise(avrg = mean(steps))
+```
+
+```r
+ggplot(filledNAdata, aes(x = interval, y = avrg)) +
+        geom_line(col = "springgreen3", size = 1) +
+        facet_wrap(~ wday, nrow = 2, ncol = 1) + 
+        labs(x = "5-minute time interval", y = "Average steps")
+```
+
+![  ](figure/figure4-1.png)
+

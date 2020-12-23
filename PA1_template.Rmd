@@ -14,6 +14,10 @@ knitr::opts_chunk$set(echo = TRUE,  fig.path = 'figure/', fig.cap = '  ', fig.po
 ```{r load-preprocess-data, message=FALSE}
 library(dplyr)
 library(ggplot2)
+
+# set locale from Bad-Russian to English
+Sys.setlocale("LC_TIME", "English")
+
 zipFile <- "activity.zip"
 filename <- "activity.csv"
 
@@ -128,18 +132,18 @@ rm(mInterval, naIndexes, allDayIntervalMean)
 **4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?**
 
 ``` {r message = FALSE}
-filledNAdata <- filledNAdata %>% group_by(date) %>% summarise(steps = sum(steps))
+filledDf <- filledNAdata %>% group_by(date) %>% summarise(steps = sum(steps))
 ```
 
 ``` {r figure3}
-ggplot(filledNAdata, aes(x=date, y=steps)) + 
+ggplot(filledDf, aes(x=date, y=steps)) + 
         geom_bar(stat = "identity", color = "black", fill = "orangered3") + 
         labs(title = "Total number of steps taken each day", x = "Date", y = "Total step counts")
 ```
 
 ```{r message=FALSE}
-newStepsMean <- as.integer(mean(filledNAdata$steps))
-newStepsMedian <- as.integer(median(filledNAdata$steps))
+newStepsMean <- as.integer(mean(filledDf$steps))
+newStepsMedian <- as.integer(median(filledDf$steps))
 ```
 * **With NAs:**  
 1. The **Mean** value of the number of steps taken per day is - **`r stepsMean` steps**.  
@@ -150,3 +154,26 @@ newStepsMedian <- as.integer(median(filledNAdata$steps))
 2. The **Median** value of the number of steps taken per day is - **`r newStepsMedian` steps**.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+**1.Create a new factor variable in the dataset with two levels "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.** 
+
+```{r}
+# add column wday with two variation: weekend or weekday
+filledNAdata <- mutate(filledNAdata,
+                       wday = ifelse(substr(weekdays(date), 1, 1) ==  "S", "weekend", "weekday"))
+filledNAdata$wday <- as.factor(filledNAdata$wday)
+head(filledNAdata)
+```
+
+**2.Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.**
+
+```{r message=FALSE}
+filledNAdata <- filledNAdata %>% group_by(wday, interval) %>% summarise(avrg = mean(steps))
+```
+```{r figure4}
+ggplot(filledNAdata, aes(x = interval, y = avrg)) +
+        geom_line(col = "springgreen3", size = 1) +
+        facet_wrap(~ wday, nrow = 2, ncol = 1) + 
+        labs(x = "5-minute time interval", y = "Average steps")
+```
+
