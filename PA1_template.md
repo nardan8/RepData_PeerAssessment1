@@ -7,7 +7,8 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 zipFile <- "activity.zip"
