@@ -30,7 +30,7 @@ df <- mutate(df, date = as.Date(date, "%Y-%m-%d"))
 
 
 ## What is mean total number of steps taken per day?
-1. Calculate the total number of steps taken per day
+**1. Calculate the total number of steps taken per day**
 
 ```r
 # group by days
@@ -39,7 +39,7 @@ groupedDf <- group_by(df, date)
 # sum steps of each day
 stepsPerDay <- summarise(groupedDf, steps = sum(steps, na.rm = TRUE))
 ```
-2. Make a histogram of the total number of steps taken each day
+**2. Make a histogram of the total number of steps taken each day**
 
 ```r
 ggplot(stepsPerDay, aes(x=date, y=steps)) + 
@@ -49,7 +49,7 @@ ggplot(stepsPerDay, aes(x=date, y=steps)) +
 
 ![  ](figure/figure2-1.png)
 
-3. Calculate and report the mean and median of the total number of steps taken per day
+**3. Calculate and report the mean and median of the total number of steps taken per day**
 
 ```r
 stepsMean <- summarise(stepsPerDay, stepsMean = round(mean(steps, na.rm = TRUE), 0))
@@ -61,7 +61,7 @@ The Median value of the number of steps taken per day is - 10395 steps.
 
 
 ## What is the average daily activity pattern?
-1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+**1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)**
 
 
 ```r
@@ -87,7 +87,7 @@ qplot(x = interval,
 
 ![  ](figure/figure-1.png)
 
-2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+**2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?**
 
 ```r
 # max average 5-minute interval steps count
@@ -99,6 +99,70 @@ The "08:35" is 5-minute interval, on average across all the days in the dataset,
 
 ## Imputing missing values
 
+**1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)**
 
+```r
+# calculate row numbers of step column with NA value
+missingValues <- sum(is.na(df$steps))
+```
+Total number of missing values is 2304.
+
+**2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.**
+To filling all of the missing values in the dataset was choosed  strategy to use mean for 5-minute interval. 
+
+
+**3. Create a new dataset that is equal to the original dataset but with the missing data filled in.**
+
+```r
+# 5-minute interval means for each day
+mInterval <- df %>% group_by(date) %>% summarise(steps = mean(steps, na.rm = TRUE))
+
+# get total dates 5-minute interval mean value
+allDayIntervalMean <- mean(mInterval$steps, na.rm = TRUE)
+
+# replace NaN's with allDaysIntervalMeanValue
+mInterval <- mutate(mInterval, steps = ifelse(is.na(steps), allDayIntervalMean, steps))
+
+# get NA indexes
+naIndexes <- which(is.na(df$steps))
+
+# replace NAs with mean values
+filledNAdata <- df
+for(i in naIndexes){
+        filledNAdata$steps[i] <- mInterval$steps[mInterval$date == filledNAdata$date[i]]
+}
+
+# free up memory
+rm(mInterval, naIndexes, allDayIntervalMean)
+```
+
+**4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?**
+
+
+```r
+filledNAdata <- filledNAdata %>% group_by(date) %>% summarise(steps = sum(steps))
+```
+
+
+```r
+ggplot(filledNAdata, aes(x=date, y=steps)) + 
+        geom_bar(stat = "identity", color = "black", fill = "orangered3") + 
+        labs(title = "Total number of steps taken each day", x = "Date", y = "Total step counts")
+```
+
+![  ](figure/figure3-1.png)
+
+
+```r
+newStepsMean <- as.integer(mean(filledNAdata$steps))
+newStepsMedian <- as.integer(median(filledNAdata$steps))
+```
+* **With NAs:**  
+1. The **Mean** value of the number of steps taken per day is - **9354 steps**.  
+2. The **Median** value of the number of steps taken per day is - **10395 steps**.
+
+* **With replacing NAs by mean of all days 5-minute intervals:**  
+1. The **Mean** value of the number of steps taken per day is - **10766 steps**.  
+2. The **Median** value of the number of steps taken per day is - **10766 steps**.
 
 ## Are there differences in activity patterns between weekdays and weekends?
